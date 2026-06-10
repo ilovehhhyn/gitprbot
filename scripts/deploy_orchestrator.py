@@ -163,12 +163,14 @@ def main():
 
     # ── Step 7: kill any previous server instance and start fresh ───────────
     print("[7/9] Starting gitprbot server ...")
+    log_file = f"{INSTALL_DIR}/gitprbot.log"
     run(client, machine_id,
-        f"pkill -f 'gitprbot.main' 2>/dev/null || true; "
-        f"sleep 1; "
+        f"pkill -f 'gitprbot.main' 2>/dev/null || true && "
+        f"sleep 1 && "
         f"cd {INSTALL_DIR} && "
-        f"nohup {PYTHON} -m gitprbot.main > /var/log/gitprbot.log 2>&1 &")
-    time.sleep(4)
+        f"nohup {PYTHON} -m gitprbot.main > {log_file} 2>&1 & "
+        f"sleep 3 && "
+        f"cat {log_file}")
     print("      Started.")
 
     # ── Step 8: health check ────────────────────────────────────────────────
