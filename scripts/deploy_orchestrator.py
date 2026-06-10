@@ -44,10 +44,12 @@ def run(client, machine_id: str, bash: str, stdin: str = None, timeout_ms: int =
         **kwargs,
     )
     while exc.status not in DONE:
-        time.sleep(1)
+        time.sleep(2)
+        print(".", end="", flush=True)
         exc = client.machines.executions.retrieve(
             machine_id=machine_id, execution_id=exc.execution_id
         )
+    print()  # newline after dots
     out = client.machines.executions.output(
         machine_id=machine_id, execution_id=exc.execution_id
     )
@@ -108,13 +110,24 @@ def main():
         wait_ready(client, machine_id)
         print("      Running.")
 
-    # ── Step 2: system deps (idempotent) ────────────────────────────────────
-    print("[2/9] Installing system dependencies ...")
-    run(client, machine_id,
-        "DEBIAN_FRONTEND=noninteractive apt-get update -qq && "
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "
-        "--no-install-recommends python3 python3-pip python3-venv git curl",
-        timeout_ms=120_000)
+    # ── Step 2: system deps (skip if already installed) ─────────────────────
+    print("[2/9] Checking system dependencies ...")
+    missing = run(client, machine_id,
+        "missing=''; "
+        "for pkg in python3 python3-venv git curl; do "
+        "  command -v $pkg >/dev/null 2>&1 || missing=\"$missing $pkg\"; "
+        "done; "
+        "python3 -c 'import venv' 2>/dev/null || missing=\"$missing python3-venv\"; "
+        "echo $missing")
+    if missing.strip():
+        print(f"      Installing: {missing.strip()} ...")
+        run(client, machine_id,
+            "DEBIAN_FRONTEND=noninteractive apt-get update -qq && "
+            "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "
+            f"--no-install-recommends {missing.strip()}",
+            timeout_ms=300_000)
+    else:
+        print("      All present, skipping apt-get.")
     print("      Done.")
 
     # ── Step 3: clone or pull (idempotent) ──────────────────────────────────
