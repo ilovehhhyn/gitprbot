@@ -44,7 +44,7 @@ def run(client, machine_id: str, bash: str, stdin: str = None, timeout_ms: int =
         **kwargs,
     )
     while exc.status not in DONE:
-        time.sleep(2)
+        time.sleep(0.5)
         print(".", end="", flush=True)
         exc = client.machines.executions.retrieve(
             machine_id=machine_id, execution_id=exc.execution_id
@@ -99,8 +99,8 @@ def main():
     if existing_id:
         machine_id = existing_id
         print(f"[1/9] Resuming machine {machine_id} ...")
+        # wake() blocks until running; watch() is only needed after create()
         client.machines.wake(machine_id=machine_id)
-        wait_ready(client, machine_id)
         print("      Running.")
     else:
         print("[1/9] Creating orchestrator machine ...")
