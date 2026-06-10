@@ -133,8 +133,11 @@ def main():
     # ── Step 4: create venv and install deps (idempotent) ───────────────────
     print("[4/9] Installing Python dependencies ...")
     run(client, machine_id,
-        f"python3 -m venv {VENV} 2>/dev/null || "
-        f"(apt-get install -y -qq python3-venv && python3 -m venv {VENV}); "
+        f"if [ ! -f {PYTHON} ]; then "
+        f"  DEBIAN_FRONTEND=noninteractive apt-get update -qq && "
+        f"  DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3.12-venv && "
+        f"  python3 -m venv {VENV}; "
+        f"fi && "
         f"{PIP} install --quiet -e {INSTALL_DIR}",
         timeout_ms=600_000)
     print("      Done.")
