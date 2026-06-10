@@ -110,17 +110,10 @@ def main():
         wait_ready(client, machine_id)
         print("      Running.")
 
-    # ── Step 2: system deps — install only what's missing, no apt-get update ─
-    print("[2/9] Checking system dependencies ...")
-    run(client, machine_id,
-        "python3 -c 'import venv' 2>/dev/null || "
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends python3-venv; "
-        "command -v git >/dev/null 2>&1 || "
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends git; "
-        "command -v curl >/dev/null 2>&1 || "
-        "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends curl",
-        timeout_ms=120_000)
-    print("      Done.")
+    # ── Step 2: verify Python and git are available ──────────────────────────
+    print("[2/9] Checking Python and git ...")
+    versions = run(client, machine_id, "python3 --version && git --version")
+    print(f"      {versions}")
 
     # ── Step 3: clone or pull (idempotent) ──────────────────────────────────
     print("[3/9] Cloning / updating repo ...")
@@ -135,7 +128,9 @@ def main():
     # ── Step 4: create venv and install deps (idempotent) ───────────────────
     print("[4/9] Installing Python dependencies ...")
     run(client, machine_id,
-        f"python3 -m venv {VENV} && {PIP} install --quiet -e {INSTALL_DIR}",
+        f"python3 -m venv {VENV} 2>/dev/null || "
+        f"(apt-get install -y -qq python3-venv && python3 -m venv {VENV}); "
+        f"{PIP} install --quiet -e {INSTALL_DIR}",
         timeout_ms=600_000)
     print("      Done.")
 
