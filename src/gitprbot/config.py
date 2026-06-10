@@ -64,7 +64,7 @@ class Settings:
         default_factory=lambda: _env_int("MACHINE_MEMORY_MIB", 4096)
     )
     machine_storage_gib: int = field(
-        default_factory=lambda: _env_int("MACHINE_STORAGE_GIB", 20)
+        default_factory=lambda: _env_int("MACHINE_STORAGE_GIB", 10)
     )
     machine_autosleep: str = field(
         default_factory=lambda: _env("MACHINE_AUTOSLEEP", "30m")

@@ -50,18 +50,23 @@ async def create_machine(repo_full_name: str) -> str:
 
 async def sleep_machine(machine_id: str) -> None:
     client = get_machines_client()
-    client.machines.sleep(machine_id)
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, lambda: client.machines.sleep(machine_id=machine_id))
 
 
 async def wake_machine(machine_id: str) -> None:
     client = get_machines_client()
-    client.machines.wake(machine_id)
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, lambda: client.machines.wake(machine_id=machine_id))
 
 
 async def get_machine_phase(machine_id: str) -> str:
     client = get_machines_client()
+    loop = asyncio.get_event_loop()
     try:
-        m = client.machines.retrieve(machine_id)
+        m = await loop.run_in_executor(
+            None, lambda: client.machines.retrieve(machine_id=machine_id)
+        )
         return m.status.phase
     except Exception as exc:
         if "404" in str(exc) or "not found" in str(exc).lower():
