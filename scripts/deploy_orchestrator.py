@@ -111,7 +111,10 @@ def main():
     # ── Step 2: system deps (idempotent) ────────────────────────────────────
     print("[2/9] Installing system dependencies ...")
     run(client, machine_id,
-        "apt-get update -qq && apt-get install -y -qq python3 python3-pip python3-venv git curl")
+        "DEBIAN_FRONTEND=noninteractive apt-get update -qq && "
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "
+        "--no-install-recommends python3 python3-pip python3-venv git curl",
+        timeout_ms=120_000)
     print("      Done.")
 
     # ── Step 3: clone or pull (idempotent) ──────────────────────────────────
