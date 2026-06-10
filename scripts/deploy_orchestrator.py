@@ -110,24 +110,16 @@ def main():
         wait_ready(client, machine_id)
         print("      Running.")
 
-    # ── Step 2: system deps (skip if already installed) ─────────────────────
+    # ── Step 2: system deps — install only what's missing, no apt-get update ─
     print("[2/9] Checking system dependencies ...")
-    missing = run(client, machine_id,
-        "missing=''; "
-        "for pkg in python3 python3-venv git curl; do "
-        "  command -v $pkg >/dev/null 2>&1 || missing=\"$missing $pkg\"; "
-        "done; "
-        "python3 -c 'import venv' 2>/dev/null || missing=\"$missing python3-venv\"; "
-        "echo $missing")
-    if missing.strip():
-        print(f"      Installing: {missing.strip()} ...")
-        run(client, machine_id,
-            "DEBIAN_FRONTEND=noninteractive apt-get update -qq && "
-            "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "
-            f"--no-install-recommends {missing.strip()}",
-            timeout_ms=300_000)
-    else:
-        print("      All present, skipping apt-get.")
+    run(client, machine_id,
+        "python3 -c 'import venv' 2>/dev/null || "
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends python3-venv; "
+        "command -v git >/dev/null 2>&1 || "
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends git; "
+        "command -v curl >/dev/null 2>&1 || "
+        "DEBIAN_FRONTEND=noninteractive apt-get install -y -qq --no-install-recommends curl",
+        timeout_ms=120_000)
     print("      Done.")
 
     # ── Step 3: clone or pull (idempotent) ──────────────────────────────────
