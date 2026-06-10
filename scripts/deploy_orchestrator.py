@@ -133,10 +133,11 @@ def main():
     # ── Step 4: create venv and install deps (idempotent) ───────────────────
     print("[4/9] Installing Python dependencies ...")
     run(client, machine_id,
-        f"if [ ! -f {PYTHON} ]; then "
+        f"if [ ! -f {PIP} ]; then "
         f"  DEBIAN_FRONTEND=noninteractive apt-get update -qq && "
         f"  DEBIAN_FRONTEND=noninteractive apt-get install -y -qq python3.12-venv && "
-        f"  python3 -m venv {VENV}; "
+        f"  python3 -m venv {VENV} && "
+        f"  curl -sS https://bootstrap.pypa.io/get-pip.py | {PYTHON}; "
         f"fi && "
         f"{PIP} install --quiet -e {INSTALL_DIR}",
         timeout_ms=600_000)
