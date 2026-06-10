@@ -43,9 +43,14 @@ def run(client, machine_id: str, bash: str, stdin: str = None, timeout_ms: int =
         command=["/bin/bash", "-c", bash],
         **kwargs,
     )
+    last_status = ""
     while exc.status not in DONE:
         time.sleep(0.5)
-        print(".", end="", flush=True)
+        if exc.status != last_status:
+            print(f" [{exc.status}]", end="", flush=True)
+            last_status = exc.status
+        else:
+            print(".", end="", flush=True)
         exc = client.machines.executions.retrieve(
             machine_id=machine_id, execution_id=exc.execution_id
         )
