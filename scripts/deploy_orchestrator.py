@@ -161,31 +161,30 @@ def main():
         print(f"      WARNING: {local_key} not found locally.")
         print(f"      You must upload it manually to {KEY_PATH_ON_MACHINE} on the machine.")
 
-    # ── Step 7: kill any previous server instance and start fresh ───────────
+    # ── Step 7: kill any previous server and launch fresh ───────────────────
     print("[7/9] Starting gitprbot server ...")
     log_file = f"{INSTALL_DIR}/gitprbot.log"
+    # Use semicolons so & only backgrounds the nohup, not the whole chain
     run(client, machine_id,
-        f"pkill -f 'gitprbot.main' 2>/dev/null || true && "
-        f"sleep 1 && "
-        f"cd {INSTALL_DIR} && "
-        f"nohup {PYTHON} -m gitprbot.main > {log_file} 2>&1 & "
-        f"sleep 3 && "
-        f"cat {log_file}")
-    print("      Started.")
+        f"pkill -f gitprbot.main 2>/dev/null; "
+        f"sleep 1; "
+        f"cd {INSTALL_DIR}; "
+        f"nohup {PYTHON} -m gitprbot.main > {log_file} 2>&1 &")
+    print("      Launched, waiting for startup ...")
+    time.sleep(6)
 
     # ── Step 8: health check ────────────────────────────────────────────────
     print("[8/9] Health check ...")
     try:
         health = run(client, machine_id, "curl -sf http://localhost:8000/healthz")
         print(f"      {health}")
-    except RuntimeError as e:
-        # Print server log tail to help diagnose
+    except RuntimeError:
         try:
-            log = run(client, machine_id, "tail -30 /var/log/gitprbot.log")
-            print(f"      Health check failed. Server log:\n{log}")
+            log = run(client, machine_id, f"tail -40 {log_file}")
+            print(f"      Server log:\n{log}")
         except Exception:
             pass
-        raise SystemExit("Server did not start — see log above.") from e
+        raise SystemExit("Server did not start — see log above.")
 
     # ── Step 9: expose port publicly ────────────────────────────────────────
     print("[9/9] Exposing port 8000 ...")
